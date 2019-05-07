@@ -170,6 +170,7 @@ if [ "$(uname)" = "Darwin" ] && [ "$HOME" = "$PWD" ]; then
 fi
 
 # Use local jar temporary
+rm -f lib
 mkdir lib
 cd lib
 wget https://github.com/FISCO-BCOS/LargeFiles/raw/master/binaries/jar/web3sdk-console.jar
