@@ -169,4 +169,12 @@ if [ "$(uname)" = "Darwin" ] && [ "$HOME" = "$PWD" ]; then
   cd "$(dirname "$0")"
 fi
 
+# Use local jar temporary
+mkdir lib
+cd lib
+wget https://github.com/FISCO-BCOS/LargeFiles/raw/master/binaries/jar/web3sdk-console.jar
+wget https://github.com/FISCO-BCOS/LargeFiles/raw/master/binaries/jar/solcJ-all-0.4.25.jar
+cd -
+
 exec "$JAVACMD" "$@"
+
