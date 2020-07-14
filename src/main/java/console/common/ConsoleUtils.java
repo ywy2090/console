@@ -224,13 +224,52 @@ public class ConsoleUtils {
         }
     }
 
+    /**
+     * Compile the contract file and return the ABI file
+     *
+     * @param solFile
+     * @return
+     * @throws IOException
+     */
+    public static String compileSolForABI(File solFile) throws IOException {
+
+        String contractName = solFile.getName().split("\\.")[0];
+
+        /** ecdsa compile */
+        SolidityCompiler.Result res = SolidityCompiler.compile(solFile, false, true, ABI);
+
+        logger.debug(
+                " solidity compiler, contract: {}, result: {}, output: {}, error: {}",
+                contractName,
+                !res.isFailed(),
+                res.getOutput(),
+                res.getErrors());
+
+        if (res.isFailed() || "".equals(res.getOutput())) {
+            throw new CompileSolidityException(" Compile error: " + res.getErrors());
+        }
+
+        CompilationResult result = CompilationResult.parse(res.getOutput());
+        CompilationResult.ContractMetadata meta = result.getContract(contractName);
+
+        return meta.abi;
+    }
+
+    /**
+     * @param tempDirPath
+     * @param packageName
+     * @param solFile
+     * @param abiDir
+     * @param binDir
+     * @throws IOException
+     */
     public static void compileSolToJava(
             String tempDirPath, String packageName, File solFile, String abiDir, String binDir)
             throws IOException {
 
         String contractName = solFile.getName().split("\\.")[0];
 
-        /** ecdsa compile */
+        /** compile */
         SolidityCompiler.Result res =
                 SolidityCompiler.compile(solFile, false, true, ABI, BIN, INTERFACE, METADATA);
         logger.debug(
