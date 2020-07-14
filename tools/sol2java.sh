@@ -25,7 +25,12 @@ function LOG_INFO()
 
 function Usage() {
     LOG_INFO "# Compile Solidity Tool"
-    LOG_INFO "./sol2java.sh [packageName]\n"
+    LOG_INFO "\t ./sol2java.sh [packageName]"
+    LOG_INFO "\t ./sol2java.sh [packageName] [solidity file path]"
+    LOG_INFO "\n # Example: "
+    LOG_INFO "\t ./sol2java.sh org.fisco.contract"
+    LOG_INFO "\t ./sol2java.sh org.fisco.contract /data/fisco/HelloWorld.sol"
+    LOG_INFO "\t ./sol2java.sh org.fisco.contract ./fisco/HelloWorld.sol"
 }
 
 function check_java(){
@@ -51,12 +56,12 @@ function check_java(){
        exit 1
    fi
 }
-if [ "${1}" == "-h" ] || [ "${1}" == "--help" ] || [ "${1}" == "help" ];then
+if [ $# == 0 ] || [ "${1}" == "-h" ] || [ "${1}" == "--help" ] || [ "${1}" == "help" ];then
     Usage
     exit 0
 else
      check_java
-     java -cp "apps/*:lib/*:conf/" console.common.ConsoleUtils $1    
+     java -cp "apps/*:lib/*:conf/" console.common.ConsoleUtils $@
 fi
 
 

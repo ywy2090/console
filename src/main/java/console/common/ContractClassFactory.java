@@ -132,6 +132,7 @@ public class ContractClassFactory {
         if (!name.endsWith(SOL_POSTFIX)) {
             name = name + SOL_POSTFIX;
         }
+
         File solFileList = new File(SOLIDITY_PATH);
         if (!solFileList.exists()) {
             throw new IOException("Please checkout the directory " + SOLIDITY_PATH + " is exist.");
