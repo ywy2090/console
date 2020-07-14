@@ -249,6 +249,11 @@ public class ContractImpl implements ContractFace {
     }
 
     @Override
+    public void listAbi(String[] params) throws Exception {
+        System.out.println(" listAbi is not implemented. ");
+    }
+
+    @Override
     public void call(String[] params) throws Exception {
         if (params.length < 2) {
             HelpInfo.promptHelp("call");

@@ -227,6 +227,7 @@ public class JlineUtils {
                         "getCode",
                         "getTotalTransactionCount",
                         "getDeployLog",
+                        "listAbi",
                         "addSealer",
                         "addObserver",
                         "removeNode",

@@ -181,6 +181,14 @@ public class HelpInfo {
         System.out.println();
     }
 
+    public static void listAbiHelp() {
+        System.out.println("List functions and events of the contract.");
+        System.out.println("Usage: listAbi [contractName/contractFilePath]");
+        System.out.println(
+                "contractName/contractFilePath -- the contract name or contract file path");
+        System.out.println();
+    }
+
     public static void getBlockNumberHelp() {
         System.out.println("Query the number of most recent block.");
         System.out.println("Usage: getBlockNumber");
