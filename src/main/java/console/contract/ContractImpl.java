@@ -1,5 +1,6 @@
 package console.contract;
 
+import console.account.AccountManager;
 import console.common.AbiAndBin;
 import console.common.Address;
 import console.common.Common;
@@ -48,7 +49,7 @@ public class ContractImpl implements ContractFace {
     private static final Logger logger = LoggerFactory.getLogger(ContractImpl.class);
 
     private int groupID;
-    private Credentials credentials;
+    private AccountManager accountManager;
     private StaticGasProvider gasProvider;
     private Web3j web3j;
 
@@ -63,13 +64,17 @@ public class ContractImpl implements ContractFace {
     }
 
     @Override
+    public void setAccountManager(AccountManager accountManager) {
+        this.accountManager = accountManager;
+    }
+
+    @Override
     public void setGasProvider(StaticGasProvider gasProvider) {
         this.gasProvider = gasProvider;
     }
 
-    @Override
-    public void setCredentials(Credentials credentials) {
-        this.credentials = credentials;
+    public AccountManager getAccountManager() {
+        return accountManager;
     }
 
     @Override
@@ -87,7 +92,12 @@ public class ContractImpl implements ContractFace {
             Class<?> contractClass = ContractClassFactory.compileContract(name);
             RemoteCall<?> remoteCall =
                     ContractClassFactory.handleDeployParameters(
-                            web3j, credentials, gasProvider, contractClass, params, 2);
+                            web3j,
+                            accountManager.getCurrentAccount(),
+                            gasProvider,
+                            contractClass,
+                            params,
+                            2);
             Contract contract = (Contract) remoteCall.send();
             String contractAddress = contract.getContractAddress();
             System.out.println("contract address: " + contractAddress);
@@ -277,7 +287,13 @@ public class ContractImpl implements ContractFace {
             return;
         }
         contractAddress = convertAddr.getAddress();
-        Object contractObject = load.invoke(null, contractAddress, web3j, credentials, gasProvider);
+        Object contractObject =
+                load.invoke(
+                        null,
+                        contractAddress,
+                        web3j,
+                        accountManager.getCurrentAccount(),
+                        gasProvider);
         String funcName = params[3];
         Method[] methods = contractClass.getDeclaredMethods();
         String[] newParams = new String[params.length - 4];
@@ -398,14 +414,16 @@ public class ContractImpl implements ContractFace {
             HelpInfo.promptHelp("deployByCNS");
             return;
         }
-        PermissionService permissionTableService = new PermissionService(web3j, credentials);
+        PermissionService permissionTableService =
+                new PermissionService(web3j, accountManager.getCurrentAccount());
         List<PermissionInfo> permissions = permissionTableService.listCNSManager();
         boolean flag = false;
         if (permissions.size() == 0) {
             flag = true;
         } else {
             for (PermissionInfo permission : permissions) {
-                if ((credentials.getAddress()).equals(permission.getAddress())) {
+                if ((accountManager.getCurrentAccount().getAddress())
+                        .equals(permission.getAddress())) {
                     flag = true;
                     break;
                 }
@@ -419,7 +437,7 @@ public class ContractImpl implements ContractFace {
 
         String name = params[1];
         name = ContractClassFactory.removeSolPostfix(name);
-        CnsService cnsService = new CnsService(web3j, credentials);
+        CnsService cnsService = new CnsService(web3j, accountManager.getCurrentAccount());
         List<CnsInfo> qcns = cnsService.queryCnsByNameAndVersion(name, params[2]);
         if (qcns.size() != 0) {
             ConsoleUtils.printJson(
@@ -432,7 +450,12 @@ public class ContractImpl implements ContractFace {
             Class<?> contractClass = ContractClassFactory.compileContract(name);
             RemoteCall<?> remoteCall =
                     ContractClassFactory.handleDeployParameters(
-                            web3j, credentials, gasProvider, contractClass, params, 3);
+                            web3j,
+                            accountManager.getCurrentAccount(),
+                            gasProvider,
+                            contractClass,
+                            params,
+                            3);
             String contractVersion = params[2];
             if (!ContractClassFactory.checkVersion(contractVersion)) {
                 return;
@@ -502,7 +525,7 @@ public class ContractImpl implements ContractFace {
         }
         // get address from cns
         String contractAddress = "";
-        CnsService cnsResolver = new CnsService(web3j, credentials);
+        CnsService cnsResolver = new CnsService(web3j, accountManager.getCurrentAccount());
         try {
             contractAddress =
                     cnsResolver.getAddressByContractNameAndVersion(contractNameAndVersion);
@@ -528,7 +551,13 @@ public class ContractImpl implements ContractFace {
                         Web3j.class,
                         Credentials.class,
                         ContractGasProvider.class);
-        Object contractObject = load.invoke(null, contractAddress, web3j, credentials, gasProvider);
+        Object contractObject =
+                load.invoke(
+                        null,
+                        contractAddress,
+                        web3j,
+                        accountManager.getCurrentAccount(),
+                        gasProvider);
         String funcName = params[2];
         Method[] methods = contractClass.getMethods();
         String[] newParams = new String[params.length - 3];
@@ -651,7 +680,7 @@ public class ContractImpl implements ContractFace {
             return;
         }
 
-        CnsService cnsService = new CnsService(web3j, credentials);
+        CnsService cnsService = new CnsService(web3j, accountManager.getCurrentAccount());
         List<CnsInfo> cnsInfos = new ArrayList<>();
         String contractName = params[1];
         if (contractName.endsWith(".sol")) {

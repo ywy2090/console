@@ -1,5 +1,7 @@
 package console;
 
+import console.account.AccountInterface;
+import console.account.AccountManager;
 import console.common.ConsoleExceptionUtils;
 import console.common.ConsoleUtils;
 import console.common.HelpInfo;
@@ -31,6 +33,8 @@ public class ConsoleClient {
     private static PrecompiledFace precompiledFace;
     private static PermissionFace permissionFace;
     private static ContractFace contractFace;
+    private static AccountManager accountManager;
+    private static AccountInterface accountInterface;
 
     public static int INPUT_FLAG = 0;
 
@@ -43,10 +47,13 @@ public class ConsoleClient {
         try {
             consoleInitializer = new ConsoleInitializer();
             consoleInitializer.init(args);
+            accountManager = consoleInitializer.getAccountManager();
             web3jFace = consoleInitializer.getWeb3jFace();
             precompiledFace = consoleInitializer.getPrecompiledFace();
             permissionFace = consoleInitializer.getPermissionFace();
             contractFace = consoleInitializer.getContractFace();
+            accountInterface = consoleInitializer.getAccountInterface();
+
             lineReader = JlineUtils.getLineReader();
             sc = new Scanner(System.in);
             KeyMap<Binding> keymap = lineReader.getKeyMaps().get(LineReader.MAIN);
@@ -348,6 +355,21 @@ public class ConsoleClient {
                         break;
                     case "getAccountStatus":
                         permissionFace.getAccountStatus(params);
+                        break;
+                    case "newAccount":
+                        accountInterface.newAccount(params);
+                        break;
+                    case "loadAccount":
+                        accountInterface.loadAccount(params);
+                        break;
+                    case "listAccount":
+                        accountInterface.listAccount(params);
+                        break;
+                    case "switchAccount":
+                        accountInterface.switchAccount(params);
+                        break;
+                    case "saveAccount":
+                        accountInterface.saveAccount(params);
                         break;
                     default:
                         System.out.println(

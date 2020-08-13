@@ -1,5 +1,9 @@
 package console;
 
+import console.account.AccountImpl;
+import console.account.AccountInterface;
+import console.account.AccountManager;
+import console.account.AccountTool;
 import console.common.Common;
 import console.common.ContractClassFactory;
 import console.common.HelpInfo;
@@ -33,8 +37,6 @@ import org.fisco.bcos.channel.client.Service;
 import org.fisco.bcos.web3j.crypto.Credentials;
 import org.fisco.bcos.web3j.crypto.ECKeyPair;
 import org.fisco.bcos.web3j.crypto.EncryptType;
-import org.fisco.bcos.web3j.crypto.Keys;
-import org.fisco.bcos.web3j.crypto.gm.GenCredential;
 import org.fisco.bcos.web3j.precompile.common.PrecompiledCommon;
 import org.fisco.bcos.web3j.protocol.Web3j;
 import org.fisco.bcos.web3j.protocol.channel.ChannelEthereumService;
@@ -53,12 +55,11 @@ public class ConsoleInitializer {
 
     private ChannelEthereumService channelEthereumService;
     private ApplicationContext context;
-    private ECKeyPair keyPair;
     private StaticGasProvider gasProvider =
             new StaticGasProvider(new BigInteger("300000000"), new BigInteger("300000000"));
     private Web3j web3j = null;
-    private Credentials credentials;
-    private String privateKey = "";
+    private Credentials credentials = AccountTool.newAccount();;
+    private AccountManager accountManager = null;
     private int groupID;
     public static final int InvalidRequest = 40009;
     public static final String ACCOUNT_DIR1 = "accounts/";
@@ -68,6 +69,7 @@ public class ConsoleInitializer {
     private PrecompiledFace precompiledFace;
     private PermissionFace permissionFace;
     private ContractFace contractFace;
+    private AccountInterface accountInterface;
 
     public void init(String[] args)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
@@ -76,10 +78,11 @@ public class ConsoleInitializer {
         context = new ClassPathXmlApplicationContext("classpath:applicationContext.xml");
         Service service = context.getBean(Service.class);
         groupID = service.getGroupId();
+        accountManager = new AccountManager();
 
         switch (args.length) {
             case 0: // bash start.sh
-                useDefaultCredentials();
+                // do nothing
                 break;
             case 1: // bash start.sh groupID
                 if ("-l".equals(args[0])) { // input by scanner for log
@@ -87,13 +90,11 @@ public class ConsoleInitializer {
                 } else {
                     groupID = setGroupID(args[0]);
                 }
-                useDefaultCredentials();
                 break;
             case 2: // bash start.sh groupID -l
                 if ("-l".equals(args[1])) { // input by scanner for log
                     ConsoleClient.INPUT_FLAG = 1;
                     groupID = setGroupID(args[0]);
-                    useDefaultCredentials();
                 } else {
                     HelpInfo.startHelp();
                     close();
@@ -155,21 +156,27 @@ public class ConsoleInitializer {
             web3jFace = new Web3jImpl();
             web3jFace.setWeb3j(web3j);
             web3jFace.setGasProvider(gasProvider);
-            web3jFace.setCredentials(credentials);
+            web3jFace.setAccountManager(accountManager);
 
             precompiledFace = new PrecompiledImpl();
             precompiledFace.setWeb3j(web3j);
-            precompiledFace.setCredentials(credentials);
+            precompiledFace.setAccountManager(accountManager);
 
             permissionFace = new PermissionImpl();
             permissionFace.setWeb3j(web3j);
-            permissionFace.setCredentials(credentials);
+            permissionFace.setAccountManager(accountManager);
 
             contractFace = new ContractImpl();
             contractFace.setGroupID(groupID);
             contractFace.setGasProvider(gasProvider);
-            contractFace.setCredentials(credentials);
             contractFace.setWeb3j(web3j);
+
+            AccountImpl account = new AccountImpl();
+            account.setAccountManager(accountManager);
+            accountInterface = account;
+
+            accountManager.setCurrentAccount(credentials);
+            contractFace.setAccountManager(accountManager);
 
         } catch (ResponseExcepiton e) {
             if (e.getCode() == InvalidRequest) {
@@ -288,7 +295,6 @@ public class ConsoleInitializer {
         } else if ("-l".equals(args[1])) {
             groupID = setGroupID(args[0]);
             ConsoleClient.INPUT_FLAG = 1;
-            useDefaultCredentials();
         } else {
             HelpInfo.startHelp();
             close();
@@ -308,14 +314,6 @@ public class ConsoleInitializer {
             close();
         }
         return null;
-    }
-
-    private void useDefaultCredentials()
-            throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
-                    NoSuchProviderException {
-        keyPair = Keys.createEcKeyPair();
-        privateKey = keyPair.getPrivateKey().toString(16);
-        credentials = GenCredential.create(privateKey);
     }
 
     public void switchGroupID(String[] params) throws IOException {
@@ -466,5 +464,21 @@ public class ConsoleInitializer {
 
     public ContractFace getContractFace() {
         return contractFace;
+    }
+
+    public AccountManager getAccountManager() {
+        return accountManager;
+    }
+
+    public void setAccountManager(AccountManager accountManager) {
+        this.accountManager = accountManager;
+    }
+
+    public AccountInterface getAccountInterface() {
+        return accountInterface;
+    }
+
+    public void setAccountInterface(AccountInterface accountInterface) {
+        this.accountInterface = accountInterface;
     }
 }
